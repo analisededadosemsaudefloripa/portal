@@ -106,13 +106,117 @@ ggplot(idade_usuario1, aes(x = IDADE, y = USUARIOS, fill = VARIAVEL)) +
 ```
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
+#################################################################################
+#Total de Usuários por Faixa Etária
+#################################################################################
+idade_faixa <- cbind(idade_faixa, pop_fpolis)
+idade_faixa <- idade_faixa[,-c(4,5,6,9)]
+idade_faixa$USU_HOMEM <- -1*idade_faixa$USU_HOMEM
+idade_faixa$Masculino <- -1*idade_faixa$Masculino
+idade_faixa$Masculino_DIF <- idade_faixa$Masculino - idade_faixa$USU_HOMEM
+idade_faixa$Feminino_DIF <- idade_faixa$Feminino - idade_faixa$USU_MULHER
+idade_faixa1 <- idade_faixa[,-c(4,5)]
+idade_faixa1 <- melt(idade_faixa1, id = c("FAIXA"))
+names(idade_faixa1)<- c("FAIXA", "VARIAVEL", "USUARIOS")
+idade_faixa <- melt(idade_faixa, id = c("FAIXA"))
+names(idade_faixa)<- c("FAIXA", "VARIAVEL", "USUARIOS")
+
+
+idade_faixa1$VARIAVEL <- as.character(idade_faixa1$VARIAVEL)
+ggplot(idade_faixa1, aes(x = FAIXA, y = USUARIOS, fill = VARIAVEL)) + 
+  geom_bar(subset = .(VARIAVEL == "USU_HOMEM"), stat = "identity") +
+  geom_bar(subset = .(VARIAVEL == "Masculino_DIFF"), stat = "identity") +
+  geom_bar(subset = .(VARIAVEL == "USU_MULHER"), stat = "identity") +
+  geom_bar(subset = .(VARIAVEL == "Feminino_DIFF"), stat = "identity") +
+  scale_y_continuous(breaks = seq(-50000, 50000, 10000), 
+                     labels = paste0(as.character(c(seq(50, 0, -10), seq(10, 50, 10))), "m")) + 
+  coord_flip() + 
+  scale_fill_brewer(palette = "Reds") + 
+  theme_bw()+
+  ggtitle("Piramide Etária - Florianópolis vs Usuários")+
+  ylab("Milhares de pessoas")+
+  xlab(" ")
 
 ```
+
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
+idade_faixa_largo <- dcast(idade_faixa, FAIXA ~ VARIAVEL, value.var = "USUARIOS")
+idade_faixa_largo$PERC_HOMEM <- idade_faixa_largo$USU_HOMEM/idade_faixa_largo$Masculino *100
+idade_faixa_largo$PERC_MULHER <- idade_faixa_largo$USU_MULHER/idade_faixa_largo$Feminino *100
+idade_faixa_largo <- idade_faixa_largo[,c(1,8,9)]
+idade_faixa_largo$PERC_HOMEM <- -1*idade_faixa_largo$PERC_HOMEM
+idade_faixa_largo <- melt(idade_faixa_largo, id = c("FAIXA"))
+names(idade_faixa_largo)<- c("FAIXA", "VARIAVEL", "PERCENTUAL")
 
+ggplot(idade_faixa_largo, aes(x = FAIXA, y = PERCENTUAL, fill = VARIAVEL)) + 
+  geom_bar(subset = .(VARIAVEL == "PERC_HOMEM"), stat = "identity") +
+  geom_bar(subset = .(VARIAVEL == "PERC_MULHER"), stat = "identity") +
+  scale_y_continuous(breaks = seq(-100, 100, 10), 
+                     labels = paste0(as.character(c(seq(100, 0, -10), seq(10, 100, 10))), "%")) + 
+  coord_flip() + 
+  scale_fill_brewer(palette = "Reds") + 
+  theme_bw()+
+  ggtitle("Percentual de utilização por faixa etária e sexo")+
+  ylab(" ")+
+  xlab(" ")
 ```
 
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+#################################################################################
+#Total de Consultas por Idade
+#################################################################################
+idade_consulta <- idade[,c(1,4,5)]
+idade_consulta <- melt(idade_consulta, id = c("IDADE"))
+names(idade_consulta)<- c("IDADE", "VARIAVEL", "CONSULTAS")
+
+ggplot(idade_consulta, aes(x=IDADE, y=CONSULTAS, col = VARIAVEL))+
+        geom_line()+
+        scale_x_continuous(breaks = seq(0,120,10))+
+        scale_y_continuous(breaks = seq(0,65000,5000))+
+        theme_bw()
+```
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+idade_consulta1 <- idade[,c(1,4,5)]
+idade_consulta1$CONS_HOMEM <- -1*idade_consulta1$CONS_HOMEM
+idade_consulta1 <- melt(idade_consulta1, id = c("IDADE"))
+names(idade_consulta1)<- c("IDADE", "VARIAVEL", "CONSULTAS")
+
+idade_consulta1$VARIAVEL <- as.character(idade_consulta$VARIAVEL)
+ggplot(idade_consulta1, aes(x = IDADE, y = CONSULTAS, fill = VARIAVEL)) + 
+  geom_bar(subset = .(VARIAVEL == "CONS_HOMEM"), stat = "identity") + 
+  geom_bar(subset = .(VARIAVEL == "CONS_MULHER"), stat = "identity") + 
+  scale_y_continuous(breaks = seq(-60000, 60000, 5000), 
+                     labels = paste0(as.character(c(seq(60, 0, -5), seq(5, 60, 5))), "m")) + 
+  coord_flip() + 
+  scale_fill_brewer(palette = "Set1") + 
+  theme_bw()
+```
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+#################################################################################
+#Taxa de Consulta por Idade
+#################################################################################
+idade$TAXA_HOMEM <- idade$CONS_HOMEM/idade$USU_HOMEM
+idade$TAXA_MULHER <- idade$CONS_MULHER/idade$USU_MULHER 
+
+idade_taxa <- idade[,c(1,6,7)]
+idade_taxa <- melt(idade_taxa, id = c("IDADE"))
+names(idade_taxa)<- c("IDADE", "VARIAVEL", "TAXA")
+
+ggplot(idade_taxa, aes(x=IDADE, y=TAXA, col = VARIAVEL))+
+        geom_line()+
+        scale_x_continuous(breaks = seq(0,120,10))+
+        scale_y_continuous(breaks = seq(0,10,1))+
+        theme_bw()
+
+
+
+```
 
 
 
