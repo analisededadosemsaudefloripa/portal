@@ -1,0 +1,11 @@
+name: "Situação de Saúde em Florianópolis"
+output_dir: "docs"
+navbar:
+  title: "Situação de Saúde em Florianópolis"
+  right:
+    - text: "Home"
+      href: index.html
+    - text: "Atenção Primária"
+      href: atencao_primaria.html
+output:
+  html_document
